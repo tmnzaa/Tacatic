@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Owner Bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #f44;
+      margin-bottom: 5px;
+    }
+    #total {
+      margin-bottom: 10px;
+      color: #aaa;
+    }
+    button {
+      background: #f44;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    button:hover {
+      background: #c33;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #333;
+    }
+    th {
+      background: #222;
+      color: #f44;
+    }
+  </style>
+</head>
+<body>
+
+  <script>
+    // Cek login
+    if (localStorage.getItem('owner_login') !== 'true') {
+      window.location.href = 'login.html';
+    }
+  </script>
+
+  <h1>📋 Daftar Grup Aktif</h1>
+  <div id="total">Memuat...</div>
+  <button onclick="loadData()">🔄 Refresh</button>
+  <button onclick="logout()" style="background:#555;">🚪 Logout</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID Grup</th>
+        <th>Sewa</th>
+        <th>Kadaluarsa</th>
+      </tr>
+    </thead>
+    <tbody id="list"></tbody>
+  </table>
+
+  <script>
+    function formatDate(ms) {
+      const d = new Date(ms);
+      return d.toLocaleString('id-ID', { hour12: false });
+    }
+
+    function logout() {
+      localStorage.removeItem('owner_login');
+      window.location.href = 'login.html';
+    }
+
+    function loadData() {
+      document.getElementById('list').innerHTML = '';
+      document.getElementById('total').textContent = 'Memuat...';
+
+      fetch('/sewa.json')
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.getElementById('list');
+          const total = document.getElementById('total');
+          const now = Date.now();
+          let count = 0;
+
+          Object.entries(data).forEach(([id, val]) => {
+            let sisa = 'Permanen';
+            let kadaluarsa = '-';
+
+            if (val.expire !== 9999999999999) {
+              const diff = Math.ceil((val.expire - now) / 86400000);
+              sisa = diff > 0 ? `${diff} hari` : 'Expired';
+              kadaluarsa = formatDate(val.expire);
+            }
+
+            tbody.innerHTML += `
+              <tr>
+                <td>${id}</td>
+                <td>${sisa}</td>
+                <td>${kadaluarsa}</td>
+              </tr>
+            `;
+            count++;
+          });
+
+          total.textContent = `Total Grup Aktif: ${count}`;
+        })
+        .catch(() => {
+          document.getElementById('total').textContent = 'Gagal memuat data.';
+        });
+    }
+
+    loadData(); // jalankan saat halaman dibuka
+  </script>
+</body>
+</html>
