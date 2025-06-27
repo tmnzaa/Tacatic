@@ -584,3 +584,4 @@ app.get('/sewa.json', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🌐 Web owner aktif di http://localhost:${PORT}`);
 });
+require('./server.js');
